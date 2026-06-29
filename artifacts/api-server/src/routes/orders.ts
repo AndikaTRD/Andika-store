@@ -1,0 +1,134 @@
+import { Router, type IRouter } from "express";
+import { db, ordersTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
+import path from "path";
+import fs from "fs";
+import {
+  CreateOrderBody,
+  CreateOrderResponse,
+  GetOrderParams,
+  GetOrderResponse,
+  UploadPaymentProofParams,
+  UploadPaymentProofBody,
+  UploadPaymentProofResponse,
+} from "@workspace/api-zod";
+import { logger } from "../lib/logger";
+
+const router: IRouter = Router();
+
+function generateOrderId(): string {
+  const now = new Date();
+  const date = now.toISOString().slice(0, 10).replace(/-/g, "");
+  const rand = Math.floor(100 + Math.random() * 900);
+  return `ANDK${rand}-${date}`;
+}
+
+const workspaceRoot = process.cwd().endsWith(path.join("artifacts", "api-server"))
+  ? path.resolve(process.cwd(), "../..")
+  : process.cwd();
+
+const uploadsDir = path.resolve(workspaceRoot, "artifacts/api-server/uploads");
+
+function ensureUploadsDir() {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+}
+
+function serializeOrder(order: typeof ordersTable.$inferSelect) {
+  return {
+    ...order,
+    items: order.items as Array<{ productId: number; productName: string; price: number; quantity: number }>,
+    createdAt: order.createdAt.toISOString(),
+    updatedAt: order.updatedAt.toISOString(),
+  };
+}
+
+router.post("/orders", async (req, res): Promise<void> => {
+  const parsed = CreateOrderBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const { customerName, customerEmail, customerPhone, items, paymentMethod, notes } = parsed.data;
+  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const orderId = generateOrderId();
+
+  const [order] = await db
+    .insert(ordersTable)
+    .values({
+      orderId,
+      customerName,
+      customerEmail,
+      customerPhone,
+      items,
+      total,
+      paymentMethod,
+      status: "pending",
+      notes: notes ?? null,
+    })
+    .returning();
+
+  req.log.info({ orderId }, "Order created");
+  res.status(201).json(CreateOrderResponse.parse(serializeOrder(order)));
+});
+
+router.get("/orders/:orderId", async (req, res): Promise<void> => {
+  const rawId = Array.isArray(req.params.orderId) ? req.params.orderId[0] : req.params.orderId;
+  const params = GetOrderParams.safeParse({ orderId: rawId });
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [order] = await db.select().from(ordersTable).where(eq(ordersTable.orderId, params.data.orderId));
+  if (!order) {
+    res.status(404).json({ error: "Order not found" });
+    return;
+  }
+
+  res.json(GetOrderResponse.parse(serializeOrder(order)));
+});
+
+router.post("/orders/:orderId/payment-proof", async (req, res): Promise<void> => {
+  const rawId = Array.isArray(req.params.orderId) ? req.params.orderId[0] : req.params.orderId;
+  const params = UploadPaymentProofParams.safeParse({ orderId: rawId });
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const body = UploadPaymentProofBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
+    return;
+  }
+
+  const [existing] = await db.select().from(ordersTable).where(eq(ordersTable.orderId, params.data.orderId));
+  if (!existing) {
+    res.status(404).json({ error: "Order not found" });
+    return;
+  }
+
+  ensureUploadsDir();
+  const ext = path.extname(body.data.fileName) || ".jpg";
+  const fileName = `${params.data.orderId}-proof${ext}`;
+  const filePath = path.join(uploadsDir, fileName);
+
+  const base64Data = body.data.imageBase64.replace(/^data:[^;]+;base64,/, "");
+  fs.writeFileSync(filePath, Buffer.from(base64Data, "base64"));
+
+  const proofUrl = `/api/uploads/${fileName}`;
+
+  const [updated] = await db
+    .update(ordersTable)
+    .set({ paymentProofUrl: proofUrl, status: "proof_uploaded" })
+    .where(eq(ordersTable.orderId, params.data.orderId))
+    .returning();
+
+  req.log.info({ orderId: params.data.orderId }, "Payment proof uploaded");
+  res.json(UploadPaymentProofResponse.parse(serializeOrder(updated)));
+});
+
+export default router;
