@@ -1,4 +1,4 @@
-modules = ["nodejs-24"]
+modules = ["nodejs-20", "nodejs-24"]
 
 [deployment]
 router = "application"
@@ -21,6 +21,7 @@ timeoutMs = 20000
 
 [nix]
 channel = "stable-25_05"
+packages = ["remote-exec", "nano"]
 
 [[ports]]
 localPort = 8080
