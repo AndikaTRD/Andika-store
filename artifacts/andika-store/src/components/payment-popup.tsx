@@ -156,9 +156,9 @@ export function PaymentPopup({ open, onClose }: PaymentPopupProps) {
     setNama("");
     setBukti(null);
     setMethod("QRIS");
-    setLocation("/");
-    window.open(url, "_blank");
-  }
+
+    window.location.assign(url);
+    }
 
   return (
     <AnimatePresence>
@@ -376,3 +376,4 @@ export function PaymentPopup({ open, onClose }: PaymentPopupProps) {
     </AnimatePresence>
   );
 }
+
