@@ -102,6 +102,23 @@ export function PaymentPopup({ open, onClose }: PaymentPopupProps) {
 
     const orderId = generateOrderId();
 
+    // Upload bukti ke ImgBB via backend
+    let buktiUrl = "";
+    try {
+      const formData = new FormData();
+      formData.append("bukti", bukti);
+      const uploadRes = await fetch("/api/upload-bukti", {
+        method: "POST",
+        body: formData,
+      });
+      if (uploadRes.ok) {
+        const data = await uploadRes.json() as { url: string };
+        buktiUrl = data.url;
+      }
+    } catch {
+      // upload gagal, lanjut tanpa link
+    }
+
     // Build per-item lines
     const itemLines = items.map(item =>
       [
@@ -128,7 +145,8 @@ export function PaymentPopup({ open, onClose }: PaymentPopupProps) {
       "",
       "TERIMA KASIH.",
       "",
-      "LINK BUKTI (DRIVE) :",
+      `LINK BUKTI :`,
+      buktiUrl || "(tidak tersedia)",
     ].join("\n");
 
     const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
