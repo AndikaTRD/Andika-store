@@ -1,6 +1,6 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
 import { db, ordersTable } from "@workspace/db";
-import { eq, desc, and, gte, sql } from "drizzle-orm";
+import { eq, desc, gte } from "drizzle-orm";
 import {
   AdminListOrdersQueryParams,
   AdminListOrdersResponse,
@@ -12,6 +12,11 @@ import {
 
 const router: IRouter = Router();
 
+function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (req.session.isAdmin) return next();
+  res.status(401).json({ error: "Unauthorized" });
+}
+
 function serializeOrder(order: typeof ordersTable.$inferSelect) {
   return {
     ...order,
@@ -21,7 +26,27 @@ function serializeOrder(order: typeof ordersTable.$inferSelect) {
   };
 }
 
-router.get("/admin/orders", async (req, res): Promise<void> => {
+router.post("/admin/login", (req: Request, res: Response) => {
+  const { password } = req.body as { password?: string };
+  if (!password || password !== process.env.ADMIN_PASSWORD) {
+    res.status(401).json({ error: "Password salah" });
+    return;
+  }
+  req.session.isAdmin = true;
+  res.json({ ok: true });
+});
+
+router.post("/admin/logout", (req: Request, res: Response) => {
+  req.session.destroy(() => {
+    res.json({ ok: true });
+  });
+});
+
+router.get("/admin/me", (req: Request, res: Response) => {
+  res.json({ isAdmin: !!req.session.isAdmin });
+});
+
+router.get("/admin/orders", requireAdmin, async (req, res): Promise<void> => {
   const params = AdminListOrdersQueryParams.safeParse(req.query);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -37,7 +62,7 @@ router.get("/admin/orders", async (req, res): Promise<void> => {
   res.json(AdminListOrdersResponse.parse(orders.map(serializeOrder)));
 });
 
-router.patch("/admin/orders/:orderId/status", async (req, res): Promise<void> => {
+router.patch("/admin/orders/:orderId/status", requireAdmin, async (req, res): Promise<void> => {
   const rawId = Array.isArray(req.params.orderId) ? req.params.orderId[0] : req.params.orderId;
   const params = AdminUpdateOrderStatusParams.safeParse({ orderId: rawId });
   if (!params.success) {
@@ -65,7 +90,7 @@ router.patch("/admin/orders/:orderId/status", async (req, res): Promise<void> =>
   res.json(AdminUpdateOrderStatusResponse.parse(serializeOrder(updated)));
 });
 
-router.get("/admin/stats", async (_req, res): Promise<void> => {
+router.get("/admin/stats", requireAdmin, async (_req, res): Promise<void> => {
   const allOrders = await db.select().from(ordersTable);
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
