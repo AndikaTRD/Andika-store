@@ -106,9 +106,9 @@ export function PaymentPopup({ open, onClose }: PaymentPopupProps) {
     const itemLines = items.map(item =>
       [
         `AKTIVASI#${item.kode}`,
-        `PIN / TGL LAHIR: ${item.pin}`,
-        `JUMLAH QTY MEMBER: ${item.qty}`,
-        `TOTAL: ${formatRp(item.total)}`,
+        `PIN / TGL LAHIR : ${item.pin}`,
+        `JUMLAH QTY MEMBER : ${item.qty}`,
+        `TOTAL : ${formatRp(item.total)}`,
       ].join("\n")
     ).join("\n\n");
 
@@ -117,15 +117,18 @@ export function PaymentPopup({ open, onClose }: PaymentPopupProps) {
       "",
       "TRANSAKSI SUKSES",
       "",
-      `NO ORDER:\n${orderId}`,
-      "",
-      `NAMA PEMESAN:\n${nama.trim()}`,
+      `NO ORDER :`,
+      orderId,
+      `NAMA PEMESAN : ${nama.trim()}`,
       "",
       itemLines,
       "",
-      `PAYMENT METODE:\n${method}`,
+      "PAYMENT METODE :",
+      method,
       "",
       "TERIMA KASIH.",
+      "",
+      "LINK BUKTI (DRIVE) :",
     ].join("\n");
 
     const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
