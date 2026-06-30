@@ -145,8 +145,7 @@ export function PaymentPopup({ open, onClose }: PaymentPopupProps) {
       "",
       "TERIMA KASIH.",
       "",
-      `LINK BUKTI :`,
-      buktiUrl || "(tidak tersedia)",
+      `LINK BUKTI : ${buktiUrl || "(tidak tersedia)"}`,
     ].join("\n");
 
     const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
