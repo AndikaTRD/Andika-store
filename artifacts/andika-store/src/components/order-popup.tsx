@@ -152,12 +152,12 @@ export function OrderPopup({ open, onClose }: OrderPopupProps) {
                   value={pin}
                   onChange={(e) => {
                     let val = e.target.value.replace(/\D/g, "");
+                    // Cap at 8 digits max
+                    if (val.length > 8) val = val.slice(0, 8);
                     // Auto-convert 8-digit DDMMYYYY → 6-digit DDMMYY
                     if (val.length === 8) {
                       val = val.slice(0, 4) + val.slice(6, 8);
                     }
-                    // Cap at 6 digits
-                    if (val.length > 6) val = val.slice(0, 6);
                     setPin(val);
                   }}
                   placeholder="Contoh: 041275"

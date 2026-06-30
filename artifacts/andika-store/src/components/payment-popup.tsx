@@ -9,12 +9,15 @@ interface PaymentPopupProps {
   onClose: () => void;
 }
 
-const WA_NUMBER = "6285156930931";
+const WA_NUMBER = "62895328068023";
 
 const BANK_ACCOUNTS = [
-  { bank: "BCA", rekening: "1234567890", nama: "ANDIKA STORE" },
-  { bank: "BRI", rekening: "0987654321", nama: "ANDIKA STORE" },
-  { bank: "Mandiri", rekening: "1122334455", nama: "ANDIKA STORE" },
+  { bank: "Aladin Bank", rekening: "50817272571", nama: "ANDIKA STORE" },
+];
+
+const EWALLET_ACCOUNTS = [
+  { bank: "Dana", rekening: "0895328068023", nama: "ANDIKA STORE" },
+  { bank: "ShopeePay", rekening: "0895328068023", nama: "ANDIKA STORE" },
 ];
 
 type PaymentMethod = "QRIS" | "TRANSFER";
@@ -34,6 +37,37 @@ function generateOrderId(): string {
     pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
   const rand = Math.floor(1000 + Math.random() * 9000);
   return `RC-${date}-${time}-${rand}`;
+}
+
+function AccountRow({
+  acc,
+  copied,
+  onCopy,
+}: {
+  acc: { bank: string; rekening: string; nama: string };
+  copied: string | null;
+  onCopy: (text: string, key: string) => void;
+}) {
+  return (
+    <div className="rounded-xl border border-white/8 bg-white/4 px-4 py-3 flex items-center justify-between">
+      <div>
+        <p className="text-[10px] text-white/40 font-semibold uppercase tracking-widest">{acc.bank}</p>
+        <p className="text-sm font-black text-white font-mono tracking-widest">{acc.rekening}</p>
+        <p className="text-[10px] text-white/35 mt-0.5">{acc.nama}</p>
+      </div>
+      <button
+        onClick={() => onCopy(acc.rekening, acc.bank)}
+        className="w-7 h-7 rounded-lg bg-white/6 flex items-center justify-center text-white/40 hover:text-violet-300 hover:bg-violet-500/15 transition-all"
+        data-testid={`button-copy-${acc.bank.toLowerCase().replace(/\s+/g, "-")}`}
+      >
+        {copied === acc.bank ? (
+          <CheckCircle2 className="w-3.5 h-3.5 text-violet-400" />
+        ) : (
+          <Copy className="w-3.5 h-3.5" />
+        )}
+      </button>
+    </div>
+  );
 }
 
 export function PaymentPopup({ open, onClose }: PaymentPopupProps) {
@@ -230,31 +264,20 @@ export function PaymentPopup({ open, onClose }: PaymentPopupProps) {
                     className="space-y-2"
                     data-testid="transfer-section"
                   >
+                    {/* Bank */}
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-1">Bank</p>
                     {BANK_ACCOUNTS.map(acc => (
-                      <div
-                        key={acc.bank}
-                        className="rounded-xl border border-white/8 bg-white/4 px-4 py-3 flex items-center justify-between"
-                      >
-                        <div>
-                          <p className="text-[10px] text-white/40 font-semibold uppercase tracking-widest">{acc.bank}</p>
-                          <p className="text-sm font-black text-white font-mono tracking-widest">{acc.rekening}</p>
-                          <p className="text-[10px] text-white/35 mt-0.5">{acc.nama}</p>
-                        </div>
-                        <button
-                          onClick={() => copyText(acc.rekening, acc.bank)}
-                          className="w-7 h-7 rounded-lg bg-white/6 flex items-center justify-center text-white/40 hover:text-violet-300 hover:bg-violet-500/15 transition-all"
-                          data-testid={`button-copy-${acc.bank.toLowerCase()}`}
-                        >
-                          {copied === acc.bank ? (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-violet-400" />
-                          ) : (
-                            <Copy className="w-3.5 h-3.5" />
-                          )}
-                        </button>
-                      </div>
+                      <AccountRow key={acc.bank} acc={acc} copied={copied} onCopy={copyText} />
                     ))}
-                    <p className="text-[10px] text-white/30 text-center pt-1">
-                      Total yang harus ditransfer: <span className="text-violet-300 font-bold">{formatRp(grandTotal)}</span>
+
+                    {/* E-Wallet */}
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mt-3 mb-1">E-Wallet</p>
+                    {EWALLET_ACCOUNTS.map(acc => (
+                      <AccountRow key={acc.bank} acc={acc} copied={copied} onCopy={copyText} />
+                    ))}
+
+                    <p className="text-[10px] text-white/30 text-center pt-2">
+                      Total: <span className="text-violet-300 font-bold">{formatRp(grandTotal)}</span>
                     </p>
                   </motion.div>
                 )}
