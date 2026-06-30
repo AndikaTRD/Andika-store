@@ -158,6 +158,8 @@ export function OrderPopup({ open, onClose }: OrderPopupProps) {
                     if (val.length === 8) {
                       val = val.slice(0, 4) + val.slice(6, 8);
                     }
+                    // Jangan izinkan 7 digit — potong ke 6
+                    if (val.length > 6) val = val.slice(0, 6);
                     setPin(val);
                   }}
                   placeholder="Contoh: 041275"
