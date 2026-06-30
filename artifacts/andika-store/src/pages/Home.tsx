@@ -47,7 +47,7 @@ export default function Home() {
           >
             <Sparkles className="w-3 h-3 text-violet-400" />
             <span className="text-[10px] font-bold text-violet-300 uppercase tracking-widest">
-              AMANAH
+              Terpercaya & Profesional
             </span>
           </motion.div>
 
