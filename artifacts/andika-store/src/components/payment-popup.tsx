@@ -12,12 +12,12 @@ interface PaymentPopupProps {
 const WA_NUMBER = "62895328068023";
 
 const BANK_ACCOUNTS = [
-  { bank: "Aladin Bank", rekening: "50817272571", nama: "ANDIKA STORE" },
+  { bank: "Aladin Bank", rekening: "50817272571", nama: "M ANDIKA SAPUTRA" },
 ];
 
 const EWALLET_ACCOUNTS = [
-  { bank: "Dana", rekening: "0895328068023", nama: "ANDIKA STORE" },
-  { bank: "ShopeePay", rekening: "0895328068023", nama: "ANDIKA STORE" },
+  { bank: "Dana", rekening: "0895328068023", nama: "M ANDIKA SAPUTRA" },
+  { bank: "ShopeePay", rekening: "0895328068023", nama: "MUHAMMADANDIKA87" },
 ];
 
 type PaymentMethod = "QRIS" | "TRANSFER";
