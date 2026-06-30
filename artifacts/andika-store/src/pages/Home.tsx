@@ -68,7 +68,7 @@ export default function Home() {
 
           <p className="text-sm text-white/40 max-w-xs mx-auto leading-relaxed">
             Layanan aktivasi New Member Fresh.<br />
-            Proses cepat, aman, dan profesional.
+            Proses cepat, aman, dan amanah.
           </p>
         </motion.div>
       </section>
