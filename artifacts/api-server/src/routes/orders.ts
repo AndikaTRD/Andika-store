@@ -44,6 +44,40 @@ function serializeOrder(order: typeof ordersTable.$inferSelect) {
   };
 }
 
+router.post("/orders/save", async (req, res): Promise<void> => {
+  const { orderId, customerName, items, paymentMethod, proofUrl, total } = req.body as {
+    orderId: string;
+    customerName: string;
+    items: Array<{ productName: string; price: number; quantity: number; kode: string; pin: string }>;
+    paymentMethod: string;
+    proofUrl?: string;
+    total: number;
+  };
+
+  if (!orderId || !customerName || !items?.length || !paymentMethod) {
+    res.status(400).json({ error: "Data tidak lengkap" });
+    return;
+  }
+
+  const [order] = await db
+    .insert(ordersTable)
+    .values({
+      orderId,
+      customerName,
+      customerEmail: "-",
+      customerPhone: "-",
+      items,
+      total,
+      paymentMethod,
+      status: "pending",
+      paymentProofUrl: proofUrl ?? null,
+    })
+    .returning();
+
+  req.log.info({ orderId }, "Order saved");
+  res.status(201).json({ ok: true, orderId: order.orderId });
+});
+
 router.post("/orders", async (req, res): Promise<void> => {
   const parsed = CreateOrderBody.safeParse(req.body);
   if (!parsed.success) {
