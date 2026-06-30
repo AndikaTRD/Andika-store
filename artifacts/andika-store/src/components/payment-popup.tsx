@@ -1,0 +1,335 @@
+import { useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Upload, CheckCircle2, Loader2, Copy } from "lucide-react";
+import { useCart } from "@/hooks/use-cart";
+import { useLocation } from "wouter";
+
+interface PaymentPopupProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+const WA_NUMBER = "6285156930931";
+
+const BANK_ACCOUNTS = [
+  { bank: "BCA", rekening: "1234567890", nama: "ANDIKA STORE" },
+  { bank: "BRI", rekening: "0987654321", nama: "ANDIKA STORE" },
+  { bank: "Mandiri", rekening: "1122334455", nama: "ANDIKA STORE" },
+];
+
+type PaymentMethod = "QRIS" | "TRANSFER";
+
+function formatRp(n: number): string {
+  return "Rp" + n.toLocaleString("id-ID");
+}
+
+function generateOrderId(): string {
+  const now = new Date();
+  const pad = (n: number, l = 2) => String(n).padStart(l, "0");
+  const date =
+    now.getFullYear().toString() +
+    pad(now.getMonth() + 1) +
+    pad(now.getDate());
+  const time =
+    pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  return `RC-${date}-${time}-${rand}`;
+}
+
+export function PaymentPopup({ open, onClose }: PaymentPopupProps) {
+  const [nama, setNama] = useState("");
+  const [method, setMethod] = useState<PaymentMethod>("QRIS");
+  const [bukti, setBukti] = useState<File | null>(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const { items, clearCart } = useCart();
+  const [, setLocation] = useLocation();
+
+  const grandTotal = items.reduce((s, i) => s + i.total, 0);
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (f) setBukti(f);
+  }
+
+  function copyText(text: string, key: string) {
+    navigator.clipboard.writeText(text);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 1500);
+  }
+
+  async function handleConfirm() {
+    if (!nama.trim()) { setError("Nama pemesan wajib diisi."); return; }
+    if (!bukti) { setError("Silakan upload bukti pembayaran terlebih dahulu."); return; }
+    setError("");
+    setLoading(true);
+
+    const orderId = generateOrderId();
+
+    // Build per-item lines
+    const itemLines = items.map(item =>
+      [
+        `AKTIVASI#${item.kode}`,
+        `PIN / TGL LAHIR: ${item.pin}`,
+        `JUMLAH QTY MEMBER: ${item.qty}`,
+        `TOTAL: ${formatRp(item.total)}`,
+      ].join("\n")
+    ).join("\n\n");
+
+    const msg = [
+      "HALLO, SAYA SUDAH MELAKUKAN KONFIRMASI PAYMENT",
+      "",
+      "TRANSAKSI SUKSES",
+      "",
+      `NO ORDER:\n${orderId}`,
+      "",
+      `NAMA PEMESAN:\n${nama.trim()}`,
+      "",
+      itemLines,
+      "",
+      `PAYMENT METODE:\n${method}`,
+      "",
+      "TERIMA KASIH.",
+    ].join("\n");
+
+    const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
+
+    setLoading(false);
+    clearCart();
+    onClose();
+    setNama("");
+    setBukti(null);
+    setMethod("QRIS");
+    setLocation("/");
+    window.open(url, "_blank");
+  }
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          style={{ background: "rgba(4,4,16,0.92)", backdropFilter: "blur(10px)" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+          data-testid="payment-popup-backdrop"
+        >
+          <motion.div
+            className="w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl border border-violet-500/20 bg-[#0d0d1b] overflow-hidden"
+            initial={{ opacity: 0, y: 60 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ type: "spring", stiffness: 300, damping: 26 }}
+            data-testid="payment-popup"
+          >
+            <div className="h-1 bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500" />
+
+            {/* Mobile handle */}
+            <div className="flex justify-center pt-3 pb-1 sm:hidden">
+              <div className="w-10 h-1 rounded-full bg-white/15" />
+            </div>
+
+            {/* Header */}
+            <div className="px-5 pt-3 pb-4 flex items-start justify-between border-b border-white/5">
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-violet-400 font-bold mb-0.5">Pembayaran</p>
+                <h2 className="text-base font-black text-white">Konfirmasi Order</h2>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-white/30 hover:text-white hover:bg-white/8 transition-all mt-0.5"
+                data-testid="button-close-payment-popup"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div className="px-5 py-4 space-y-4 max-h-[72vh] overflow-y-auto">
+              {/* Nama */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-white/45 mb-1.5">
+                  Nama Pemesan
+                </label>
+                <input
+                  type="text"
+                  value={nama}
+                  onChange={e => setNama(e.target.value)}
+                  placeholder="Masukkan nama lengkap..."
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/20 focus:outline-none focus:border-violet-500/50 focus:bg-violet-500/5 transition-all"
+                  data-testid="input-nama-pemesan"
+                />
+              </div>
+
+              {/* Method */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-white/45 mb-2">
+                  Metode Pembayaran
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["QRIS", "TRANSFER"] as PaymentMethod[]).map(m => (
+                    <button
+                      key={m}
+                      onClick={() => setMethod(m)}
+                      className={`py-2.5 rounded-xl text-sm font-bold border transition-all ${
+                        method === m
+                          ? "bg-violet-600/25 border-violet-500/60 text-violet-300"
+                          : "bg-white/4 border-white/10 text-white/45 hover:border-white/20 hover:text-white/65"
+                      }`}
+                      data-testid={`button-method-${m.toLowerCase()}`}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* QRIS or Transfer info */}
+              <AnimatePresence mode="wait">
+                {method === "QRIS" ? (
+                  <motion.div
+                    key="qris"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-4 flex flex-col items-center"
+                    data-testid="qris-section"
+                  >
+                    {/* QRIS placeholder */}
+                    <div className="w-44 h-44 rounded-xl bg-white flex items-center justify-center mb-3 relative overflow-hidden">
+                      <div className="absolute inset-2 grid grid-cols-10 grid-rows-10 gap-0.5 opacity-80">
+                        {Array.from({ length: 100 }).map((_, i) => (
+                          <div
+                            key={i}
+                            className={`rounded-[1px] ${
+                              (Math.sin(i * 7.3 + 1) * Math.cos(i * 3.1)) > 0.1 ? "bg-black" : "bg-white"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      {/* Corner patterns */}
+                      <div className="absolute top-2 left-2 w-8 h-8 border-4 border-black rounded-sm bg-white z-10" />
+                      <div className="absolute top-2 right-2 w-8 h-8 border-4 border-black rounded-sm bg-white z-10" />
+                      <div className="absolute bottom-2 left-2 w-8 h-8 border-4 border-black rounded-sm bg-white z-10" />
+                      <div className="absolute top-3 left-3 w-4 h-4 bg-black rounded-[2px] z-20" />
+                      <div className="absolute top-3 right-3 w-4 h-4 bg-black rounded-[2px] z-20" />
+                      <div className="absolute bottom-3 left-3 w-4 h-4 bg-black rounded-[2px] z-20" />
+                    </div>
+                    <p className="text-xs font-bold text-white/70 tracking-widest uppercase">Scan QRIS</p>
+                    <p className="text-[10px] text-white/35 mt-0.5">ANDIKA STORE</p>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="transfer"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    className="space-y-2"
+                    data-testid="transfer-section"
+                  >
+                    {BANK_ACCOUNTS.map(acc => (
+                      <div
+                        key={acc.bank}
+                        className="rounded-xl border border-white/8 bg-white/4 px-4 py-3 flex items-center justify-between"
+                      >
+                        <div>
+                          <p className="text-[10px] text-white/40 font-semibold uppercase tracking-widest">{acc.bank}</p>
+                          <p className="text-sm font-black text-white font-mono tracking-widest">{acc.rekening}</p>
+                          <p className="text-[10px] text-white/35 mt-0.5">{acc.nama}</p>
+                        </div>
+                        <button
+                          onClick={() => copyText(acc.rekening, acc.bank)}
+                          className="w-7 h-7 rounded-lg bg-white/6 flex items-center justify-center text-white/40 hover:text-violet-300 hover:bg-violet-500/15 transition-all"
+                          data-testid={`button-copy-${acc.bank.toLowerCase()}`}
+                        >
+                          {copied === acc.bank ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-violet-400" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
+                    ))}
+                    <p className="text-[10px] text-white/30 text-center pt-1">
+                      Total yang harus ditransfer: <span className="text-violet-300 font-bold">{formatRp(grandTotal)}</span>
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Upload bukti */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-white/45 mb-1.5">
+                  Bukti Pembayaran
+                </label>
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className={`w-full rounded-xl border border-dashed py-3.5 flex items-center justify-center gap-2 transition-all text-sm ${
+                    bukti
+                      ? "border-violet-500/50 bg-violet-500/8 text-violet-300"
+                      : "border-white/15 bg-white/3 text-white/35 hover:border-white/25 hover:text-white/55"
+                  }`}
+                  data-testid="button-pilih-bukti"
+                >
+                  {bukti ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span className="font-semibold truncate max-w-[220px] text-sm">{bukti.name}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4" />
+                      <span className="font-medium">PILIH BUKTI</span>
+                    </>
+                  )}
+                </button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFile}
+                  data-testid="input-file-bukti"
+                />
+              </div>
+
+              {error && <p className="text-xs text-pink-400 font-medium">{error}</p>}
+            </div>
+
+            {/* Footer */}
+            <div className="px-5 pb-5 pt-2">
+              <button
+                onClick={handleConfirm}
+                disabled={loading || !bukti}
+                className={`w-full h-12 rounded-xl font-bold text-sm tracking-wider uppercase flex items-center justify-center gap-2 transition-all ${
+                  bukti
+                    ? "btn-primary text-white"
+                    : "bg-white/5 border border-white/10 text-white/25 cursor-not-allowed"
+                }`}
+                data-testid="button-konfirmasi-payment"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Memproses...
+                  </>
+                ) : (
+                  "KONFIRMASI PAYMENT"
+                )}
+              </button>
+              {!bukti && (
+                <p className="text-center text-[10px] text-white/20 mt-2">
+                  Upload bukti pembayaran untuk mengaktifkan tombol
+                </p>
+              )}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}

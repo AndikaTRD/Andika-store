@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout";
-import { PurchasePopup } from "@/components/purchase-popup";
+import { OrderPopup } from "@/components/order-popup";
 import { motion } from "framer-motion";
-import { Shield, Zap, Clock, Headphones, ChevronRight, Star } from "lucide-react";
+import { Shield, Zap, Clock, Headphones, ChevronRight, Star, Sparkles } from "lucide-react";
 
 const FEATURES = [
   { icon: Shield, label: "Akun baru & fresh" },
@@ -16,92 +16,112 @@ export default function Home() {
 
   return (
     <Layout>
-      <PurchasePopup open={popupOpen} onClose={() => setPopupOpen(false)} />
+      <OrderPopup open={popupOpen} onClose={() => setPopupOpen(false)} />
 
       {/* Hero */}
-      <section className="w-full pt-16 pb-10 px-4 flex flex-col items-center text-center relative overflow-hidden">
+      <section className="w-full pt-14 pb-8 px-4 flex flex-col items-center text-center relative overflow-hidden">
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse 70% 50% at 50% -10%, rgba(124,58,237,0.18) 0%, transparent 80%)",
+              "radial-gradient(ellipse 80% 55% at 50% -5%, rgba(124,58,237,0.2) 0%, transparent 75%)",
           }}
+        />
+        <div
+          className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
+          style={{ background: "linear-gradient(to top, rgba(8,8,20,1), transparent)" }}
         />
 
         <motion.div
-          initial={{ opacity: 0, y: 18 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="relative z-10 max-w-2xl"
+          transition={{ duration: 0.45 }}
+          className="relative z-10 max-w-lg"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-violet-500/25 bg-violet-500/8 mb-5">
-            <Star className="w-3 h-3 text-violet-400 fill-violet-400" />
-            <span className="text-xs font-semibold text-violet-300 uppercase tracking-widest">
-              Terpercaya & Berkualitas
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-violet-500/25 bg-violet-500/8 mb-6"
+          >
+            <Sparkles className="w-3 h-3 text-violet-400" />
+            <span className="text-[10px] font-bold text-violet-300 uppercase tracking-widest">
+              Terpercaya & Profesional
             </span>
-          </div>
+          </motion.div>
 
-          <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white leading-none mb-4">
-            <span className="gradient-text">ANDIKA</span>
-            {" "}STORE
+          <h1 className="text-4xl sm:text-5xl font-black tracking-tight leading-none mb-3">
+            <span
+              style={{
+                background: "linear-gradient(135deg, #a855f7 0%, #ec4899 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              NEW MEMBER
+            </span>
+            <br />
+            <span className="text-white">FRESH</span>
           </h1>
-          <p className="text-sm md:text-base text-white/45 max-w-md mx-auto leading-relaxed">
-            Layanan aktivasi akun member fresh berkualitas tinggi dengan garansi dan proses cepat.
+
+          <p className="text-sm text-white/40 max-w-xs mx-auto leading-relaxed">
+            Layanan aktivasi New Member Fresh.<br />
+            Proses cepat, aman, dan profesional.
           </p>
         </motion.div>
       </section>
 
       {/* Product Card */}
-      <section className="w-full max-w-md mx-auto px-4 pb-20">
+      <section className="w-full max-w-sm mx-auto px-4 pb-20">
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15, duration: 0.5 }}
-          className="rounded-2xl border border-violet-500/20 bg-[#0c0c1a] overflow-hidden purple-glow-sm"
+          transition={{ delay: 0.18, duration: 0.45 }}
+          className="rounded-2xl border border-violet-500/20 bg-[#0c0c1a] overflow-hidden"
+          style={{ boxShadow: "0 0 40px rgba(124,58,237,0.12), 0 4px 24px rgba(0,0,0,0.6)" }}
           data-testid="card-product-1"
         >
-          {/* Card top bar */}
-          <div className="h-0.5 bg-gradient-to-r from-violet-600 via-purple-500 to-violet-600" />
+          <div className="h-0.5 w-full bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500" />
 
-          <div className="p-6 md:p-7">
+          <div className="p-5">
             {/* Badge */}
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-violet-500/12 border border-violet-500/20 mb-5">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-violet-500/12 border border-violet-500/20 mb-4">
               <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-              <span className="text-xs font-bold uppercase tracking-widest text-violet-300">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-violet-300">
                 Available
               </span>
             </div>
 
-            {/* Product name */}
-            <h2 className="text-2xl font-black text-white mb-0.5 tracking-tight">
+            <h2 className="text-xl font-black text-white tracking-tight mb-0.5">
               NEW MEMBER FRESH
             </h2>
-            <p className="text-sm text-white/45 mb-6">Aktivasi Member Fresh</p>
+            <p className="text-xs text-white/40 mb-5">Aktivasi Member Fresh</p>
 
-            {/* Price */}
-            <div className="mb-5">
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-3xl font-black text-white">Rp6.500</span>
-                <span className="text-sm text-white/40 font-medium">/ Member</span>
+            {/* Pricing table */}
+            <div className="rounded-xl border border-white/6 bg-white/3 overflow-hidden mb-5">
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5">
+                <span className="text-xs text-white/45">1 – 9 Member</span>
+                <span className="text-sm font-black text-white">Rp6.500<span className="text-xs font-normal text-white/40">/member</span></span>
               </div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20">
-                <span className="text-xs text-violet-300 font-semibold">
-                  Beli 10 member atau lebih → <span className="text-white">Rp6.000</span> / Member
-                </span>
+              <div className="flex items-center justify-between px-4 py-2.5 bg-violet-500/8">
+                <div className="flex items-center gap-1.5">
+                  <Star className="w-3 h-3 text-violet-400 fill-violet-400" />
+                  <span className="text-xs text-violet-300 font-semibold">≥ 10 Member</span>
+                </div>
+                <span className="text-sm font-black text-violet-300">Rp6.000<span className="text-xs font-normal text-violet-400/60">/member</span></span>
               </div>
             </div>
 
-            {/* Divider */}
-            <div className="h-px bg-white/5 mb-5" />
-
             {/* Features */}
-            <div className="grid grid-cols-2 gap-2.5 mb-7">
+            <div className="grid grid-cols-2 gap-2 mb-5">
               {FEATURES.map(({ icon: Icon, label }) => (
                 <div key={label} className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-violet-500/12 flex items-center justify-center shrink-0">
+                  <div className="w-6 h-6 rounded-lg bg-violet-500/10 flex items-center justify-center shrink-0">
                     <Icon className="w-3.5 h-3.5 text-violet-400" />
                   </div>
-                  <span className="text-xs text-white/60 font-medium">{label}</span>
+                  <span className="text-xs text-white/55 font-medium">{label}</span>
                 </div>
               ))}
             </div>
@@ -109,7 +129,7 @@ export default function Home() {
             {/* CTA */}
             <button
               onClick={() => setPopupOpen(true)}
-              className="w-full h-12 rounded-xl btn-primary text-white font-bold text-sm tracking-wider uppercase flex items-center justify-center gap-2 group"
+              className="w-full h-11 rounded-xl btn-primary text-white font-bold text-sm tracking-wider uppercase flex items-center justify-center gap-1.5 group"
               data-testid="button-beli"
             >
               BELI SEKARANG
@@ -118,15 +138,13 @@ export default function Home() {
           </div>
         </motion.div>
 
-        {/* Trust note */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="text-center text-xs text-white/20 mt-4"
-          data-testid="text-trust-note"
+          className="text-center text-[10px] text-white/18 mt-4 tracking-wider"
         >
-          Proses aman & terpercaya. Konfirmasi via WhatsApp.
+          Konfirmasi otomatis via WhatsApp
         </motion.p>
       </section>
     </Layout>
