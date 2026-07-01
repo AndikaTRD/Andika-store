@@ -4,4 +4,6 @@ export const APP_CONFIG = {
   copyrightYear: "2026",
   author: "AndikaTRD",
   website: "www.andikastore.online",
+  email: "andikaotakunimerz@gmail.com",
+  whatsapp: "62895328068023",
 };
