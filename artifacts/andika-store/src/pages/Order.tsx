@@ -91,7 +91,11 @@ export default function Order() {
               {order.paymentMethod === 'QRIS' ? (
                 <div className="bg-background border border-primary/30 p-6 rounded-xl flex flex-col items-center justify-center text-center relative overflow-hidden">
                   <div className="absolute inset-0 bg-primary/5 pointer-events-none" />
-                  <QrCode className="w-32 h-32 text-primary mb-4" />
+                  <img
+                    src="/qris.jpeg"
+                    alt="QRIS ANDIKATRD STORE"
+                    className="w-full max-w-xs rounded-xl shadow-lg mb-4"
+                  />
                   <p className="font-bold text-white">Scan QRIS</p>
                   <p className="text-sm text-muted-foreground">ANDIKA STORE</p>
                   <p className="text-lg font-bold text-primary mt-2">
