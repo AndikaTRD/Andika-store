@@ -96,8 +96,13 @@ export default function Order() {
                     alt="QRIS ANDIKATRD STORE"
                     className="w-full max-w-xs rounded-xl shadow-lg mb-4"
                   />
-                  <p className="font-bold text-white">Scan QRIS</p>
-                  <p className="text-sm text-muted-foreground">ANDIKA STORE</p>
+                  <h1 className="text-4xl font-black text-red-500 mb-4">
+                    TEST BERHASIL
+                  </h1>
+
+                  <p className="font-bold text-yellow-400 text-xl">
+                    QRIS BARU
+                  </p>
                   <p className="text-lg font-bold text-primary mt-2">
                     {order.total.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' })}
                   </p>
