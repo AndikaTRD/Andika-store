@@ -253,27 +253,21 @@ export function PaymentPopup({ open, onClose }: PaymentPopupProps) {
                     data-testid="qris-section"
                   >
                     {/* QRIS placeholder */}
-                    <div className="w-44 h-44 rounded-xl bg-white flex items-center justify-center mb-3 relative overflow-hidden">
-                      <div className="absolute inset-2 grid grid-cols-10 grid-rows-10 gap-0.5 opacity-80">
-                        {Array.from({ length: 100 }).map((_, i) => (
-                          <div
-                            key={i}
-                            className={`rounded-[1px] ${
-                              (Math.sin(i * 7.3 + 1) * Math.cos(i * 3.1)) > 0.1 ? "bg-black" : "bg-white"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      {/* Corner patterns */}
-                      <div className="absolute top-2 left-2 w-8 h-8 border-4 border-black rounded-sm bg-white z-10" />
-                      <div className="absolute top-2 right-2 w-8 h-8 border-4 border-black rounded-sm bg-white z-10" />
-                      <div className="absolute bottom-2 left-2 w-8 h-8 border-4 border-black rounded-sm bg-white z-10" />
-                      <div className="absolute top-3 left-3 w-4 h-4 bg-black rounded-[2px] z-20" />
-                      <div className="absolute top-3 right-3 w-4 h-4 bg-black rounded-[2px] z-20" />
-                      <div className="absolute bottom-3 left-3 w-4 h-4 bg-black rounded-[2px] z-20" />
+                    <div className="flex flex-col items-center">
+                      <img
+                        src="/qris.jpeg"
+                        alt="QRIS ANDIKA STORE"
+                        className="w-64 rounded-xl shadow-lg"
+                      />
+
+                      <p className="mt-4 text-xs font-bold text-white/70 uppercase tracking-widest">
+                        Scan QRIS
+                      </p>
+
+                      <p className="text-[10px] text-white/40">
+                        ANDIKATRD STORE
+                      </p>
                     </div>
-                    <p className="text-xs font-bold text-white/70 tracking-widest uppercase">Scan QRIS</p>
-                    <p className="text-[10px] text-white/35 mt-0.5">ANDIKA STORE</p>
                   </motion.div>
                 ) : (
                   <motion.div
