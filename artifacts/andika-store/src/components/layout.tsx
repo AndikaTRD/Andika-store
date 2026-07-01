@@ -1,3 +1,4 @@
+import { APP_CONFIG } from "@/config/app";
 import { Link, useLocation } from "wouter";
 import { Store, ShoppingCart } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
@@ -82,7 +83,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <footer className="border-t border-white/5 py-5">
         <div className="max-w-lg mx-auto px-4 text-center">
           <p className="text-[10px] text-white/15 tracking-widest uppercase">
-            © {new Date().getFullYear()} ANDIKA STORE
+            © {APP_CONFIG.copyrightYear} {APP_CONFIG.name} {APP_CONFIG.version}
           </p>
         </div>
       </footer>
