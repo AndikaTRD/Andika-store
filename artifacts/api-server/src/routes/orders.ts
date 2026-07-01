@@ -126,43 +126,132 @@ router.get("/orders/:orderId", async (req, res): Promise<void> => {
 });
 
 router.post("/orders/:orderId/payment-proof", async (req, res): Promise<void> => {
-  const rawId = Array.isArray(req.params.orderId) ? req.params.orderId[0] : req.params.orderId;
-  const params = UploadPaymentProofParams.safeParse({ orderId: rawId });
+  const rawId = Array.isArray(req.params.orderId)
+    ? req.params.orderId[0]
+    : req.params.orderId;
+
+  const params = UploadPaymentProofParams.safeParse({
+    orderId: rawId,
+  });
+
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
   }
 
   const body = UploadPaymentProofBody.safeParse(req.body);
+
   if (!body.success) {
     res.status(400).json({ error: body.error.message });
     return;
   }
 
-  const [existing] = await db.select().from(ordersTable).where(eq(ordersTable.orderId, params.data.orderId));
+  const [existing] = await db
+    .select()
+    .from(ordersTable)
+    .where(eq(ordersTable.orderId, params.data.orderId));
+
   if (!existing) {
     res.status(404).json({ error: "Order not found" });
     return;
   }
 
-  ensureUploadsDir();
-  const ext = path.extname(body.data.fileName) || ".jpg";
-  const fileName = `${params.data.orderId}-proof${ext}`;
-  const filePath = path.join(uploadsDir, fileName);
+  const apiKey = process.env.IMGBB_API_KEY;
 
-  const base64Data = body.data.imageBase64.replace(/^data:[^;]+;base64,/, "");
-  fs.writeFileSync(filePath, Buffer.from(base64Data, "base64"));
+  if (!apiKey) {
+    req.log.error("IMGBB_API_KEY tidak ditemukan");
+    res.status(500).json({
+      error: "IMGBB_API_KEY tidak dikonfigurasi",
+    });
+    return;
+  }
 
-  const proofUrl = `/api/uploads/${fileName}`;
+  try {
+    const base64Data = body.data.imageBase64.replace(
+      /^data:[^;]+;base64,/,
+      "",
+    );
 
-  const [updated] = await db
-    .update(ordersTable)
-    .set({ paymentProofUrl: proofUrl, status: "proof_uploaded" })
-    .where(eq(ordersTable.orderId, params.data.orderId))
-    .returning();
+    const form = new URLSearchParams();
+    form.set("key", apiKey);
+    form.set("image", base64Data);
+    form.set("name", `${params.data.orderId}-proof`);
 
-  req.log.info({ orderId: params.data.orderId }, "Payment proof uploaded");
-  res.json(UploadPaymentProofResponse.parse(serializeOrder(updated)));
+    const imgbbRes = await fetch("https://api.imgbb.com/1/upload", {
+      method: "POST",
+      body: form,
+    });
+
+    if (!imgbbRes.ok) {
+      const errorText = await imgbbRes.text();
+
+      req.log.error(
+        {
+          status: imgbbRes.status,
+          body: errorText,
+        },
+        "ImgBB upload failed",
+      );
+
+      res.status(502).json({
+        error: "Gagal upload ke ImgBB",
+      });
+
+      return;
+    }
+
+    const json = (await imgbbRes.json()) as {
+      success: boolean;
+      data: {
+        url: string;
+        display_url: string;
+      };
+    };
+
+    if (!json.success) {
+      req.log.error(json, "ImgBB returned unsuccessful response");
+
+      res.status(502).json({
+        error: "Upload ImgBB gagal",
+      });
+
+      return;
+    }
+
+    const proofUrl = json.data.display_url || json.data.url;
+
+    const [updated] = await db
+      .update(ordersTable)
+      .set({
+        paymentProofUrl: proofUrl,
+        status: "proof_uploaded",
+      })
+      .where(eq(ordersTable.orderId, params.data.orderId))
+      .returning();
+
+    req.log.info(
+      {
+        orderId: params.data.orderId,
+        proofUrl,
+      },
+      "Payment proof uploaded to ImgBB",
+    );
+
+    res.json(
+      UploadPaymentProofResponse.parse(
+        serializeOrder(updated),
+      ),
+    );
+  } catch (err) {
+    req.log.error(
+      { err },
+      "Unexpected error while uploading payment proof",
+    );
+
+    res.status(500).json({
+      error: "Terjadi kesalahan saat upload bukti pembayaran",
+    });
+  }
 });
 
 export default router;
