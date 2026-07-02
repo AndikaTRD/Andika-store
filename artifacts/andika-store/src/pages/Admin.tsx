@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, LogOut, RefreshCw, ExternalLink, CheckCircle2, Clock, XCircle, ShieldCheck } from "lucide-react";
+import { Lock, LogOut, RefreshCw, ExternalLink, CheckCircle2, Clock, XCircle, ShieldCheck, ArrowLeft } from "lucide-react";
 
 function formatRp(n: number) {
   return "Rp" + n.toLocaleString("id-ID");
@@ -52,6 +52,9 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function Admin() {
+  const goHome = () => {
+    window.location.href = "/";
+  };
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
@@ -187,11 +190,28 @@ export default function Admin() {
       {/* Header */}
       <div className="border-b border-white/5 bg-[#0d0d1b]">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div>
-            <p className="text-[10px] uppercase tracking-widest text-violet-400 font-bold">Admin Panel</p>
-            <h1 className="text-sm font-black text-white">ANDIKA STORE</h1>
-          </div>
-          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+
+              <button
+                onClick={goHome}
+                className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-violet-400 font-bold">
+                  Admin Panel
+                </p>
+
+                <h1 className="text-sm font-black text-white">
+                  ANDIKA STORE
+                </h1>
+              </div>
+
+            </div>
+
+            <div className="flex items-center gap-2">
             <button
               onClick={fetchData}
               className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
