@@ -7,6 +7,16 @@ function formatRp(n: number) {
 }
 
 function formatDate(iso: string) {
+  function formatGroupDate(iso: string) {
+    const d = new Date(iso);
+
+    return d.toLocaleDateString("id-ID", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  }
   const d = new Date(iso);
   return (
     d.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }) +

@@ -55,12 +55,13 @@ router.get("/admin/orders", requireAdmin, async (req, res): Promise<void> => {
 
   const { status } = params.data;
 
-  const orders = status
-    ? await db.select().from(ordersTable).where(eq(ordersTable.status, status)).orderBy(desc(ordersTable.createdAt))
-    : await db.select().from(ordersTable).orderBy(desc(ordersTable.createdAt));
-
-  res.json(AdminListOrdersResponse.parse(orders.map(serializeOrder)));
-});
+try {
+  const orders = await db.select().from(ordersTable);
+  res.json(orders);
+} catch (err) {
+  console.error(err);
+  throw err;
+}
 
 router.patch("/admin/orders/:orderId/status", requireAdmin, async (req, res): Promise<void> => {
   const rawId = Array.isArray(req.params.orderId) ? req.params.orderId[0] : req.params.orderId;
