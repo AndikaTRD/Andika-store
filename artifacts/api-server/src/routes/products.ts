@@ -10,8 +10,19 @@ import {
 const router: IRouter = Router();
 
 router.get("/products", async (_req, res): Promise<void> => {
-  const products = await db.select().from(productsTable).where(eq(productsTable.isActive, true));
-  res.json(ListProductsResponse.parse(products));
+  try {
+    const products = await db
+      .select()
+      .from(productsTable)
+      .where(eq(productsTable.isActive, true));
+
+    res.json(ListProductsResponse.parse(products));
+  } catch (err) {
+    console.error("PRODUCTS ERROR:", err);
+    res.status(500).json({
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 });
 
 router.get("/products/:id", async (req, res): Promise<void> => {

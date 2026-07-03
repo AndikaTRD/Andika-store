@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, LogOut, RefreshCw, ExternalLink, CheckCircle2, Clock, XCircle, ShieldCheck, ArrowLeft } from "lucide-react";
 
+const API = "https://www.andikastore.online";
+
 function formatRp(n: number) {
   return "Rp" + n.toLocaleString("id-ID");
 }
@@ -77,7 +79,9 @@ export default function Admin() {
 
   async function checkSession() {
     try {
-      const res = await fetch("/api/admin/me");
+      const res = await fetch(`${API}/api/admin/me`, {
+          credentials: "include",
+        });
       const data = await res.json() as { isAdmin: boolean };
       setIsAdmin(data.isAdmin);
     } catch {
@@ -88,8 +92,12 @@ export default function Admin() {
   async function fetchData() {
     setLoading(true);
     const [oRes, sRes] = await Promise.all([
-      fetch("/api/admin/orders"),
-      fetch("/api/admin/stats"),
+      fetch(`${API}/api/admin/orders`, {
+        credentials: "include",
+      }),
+      fetch(`${API}/api/admin/stats`, {
+        credentials: "include",
+      }),
     ]);
     if (oRes.ok) setOrders(await oRes.json() as Order[]);
     if (sRes.ok) setStats(await sRes.json() as Stats);
@@ -103,7 +111,8 @@ export default function Admin() {
     e.preventDefault();
     setLoginError("");
     setLoginLoading(true);
-    const res = await fetch("/api/admin/login", {
+    const res = await fetch(`${API}/api/admin/login`, {
+        credentials: "include",
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ password }),
@@ -118,14 +127,16 @@ export default function Admin() {
   }
 
   async function handleLogout() {
-    await fetch("/api/admin/logout", { method: "POST" });
+    await fetch(`${API}/api/admin/logout`, {
+                                         credentials: "include", method: "POST" });
     setIsAdmin(false);
     setOrders([]);
     setStats(null);
   }
 
   async function updateStatus(orderId: string, status: string) {
-    await fetch(`/api/admin/orders/${orderId}/status`, {
+    await fetch(`${API}/api/admin/orders/${orderId}/status`, {
+        credentials: "include",
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
